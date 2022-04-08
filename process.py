@@ -9,7 +9,7 @@ class Process(ABC):
         self.__time_process = 0
         self.__space_process = 0
         self.count_entrance = 0
-        self.database = DatabaseManager("localhost","poc","root", "bandtec")
+        self.database = DatabaseManager("localhost","poupay","root", "urubu100")
         
 
     def run(self):
@@ -29,5 +29,8 @@ class Process(ABC):
         self.__space_process = psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2
 
     def __save(self):
-        print(self.__space_process, self.count_entrance, self.__time_process)
+        data = (self.__space_process, self.__time_process)
+        self.database.insert('INSERT INTO metricas (espaco, caso, tempo, \
+                   created_at) VALUES (%s, "caso 1", %s,now())',data)
+        print(self.__space_process, self.__time_process)
 

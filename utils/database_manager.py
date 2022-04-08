@@ -10,7 +10,8 @@ class DatabaseManager:
         self.cursor = self.connect.cursor()
     
     def insert(self, query: str, data: tuple):
-        self.cursor(query, data)
+        self.cursor.execute(query, data)
+        self.connect.commit()
 
     def read(self, query: str, data: tuple):
         result = {}
