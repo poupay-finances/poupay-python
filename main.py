@@ -23,9 +23,12 @@ def main():
     print(MENU)
     while(is_running):
         case = input("Digite o número do caso: ").strip()
-        if(case in cases.keys() or case == '6'):
+        if(case in cases.keys()):
             processLoop = ProcessLoop(cases[case], case)
             processLoop.run()
+        elif(case == '6'):
+            print("Adeus!")
+            is_running = False
         else:
             print("Opção não existente! tente novamente: ")
 
