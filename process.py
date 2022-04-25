@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
-from utils.process_utils import get_time_response
 from utils.database_manager import DatabaseManager
-import os, psutil
+import os
 
 
 class Process(ABC):
