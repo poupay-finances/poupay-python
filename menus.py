@@ -29,12 +29,10 @@ def menu():
 def cattle_option():
     year = input("Gerar dados de Bovino com base de qual ano(2009 a 2020): ")
     if not_is_year_between_2009_and_2020(year):
-        return False
-    month = input("Gerar de pecuária dados de qual mês(número): ")
-    if not_is_year_between_2009_and_2020(year):
-        return False
+        print("Digite um ano válido")
+        return True
     print("Processando... ")
-    cattle = GenerateCattle(year, month)
+    cattle = GenerateCattle(year)
     cattle.run()
     print("Dados gerados e enviados para o banco!")
     input("Pressione qualque tecla para continuar...")
@@ -45,12 +43,10 @@ def cattle_option():
 def soy_option():
     year = input("Gerar dados de soja com base de qual ano(2018 a 2020): ")
     if not_is_year_between_2018_and_2020(year):
-        return True
-    month = input("Gerar de agricultura dados de qual mês(número): ")
-    if not_is_a_month(month):
+        print("Digite um ano válido")
         return True
     print("Processando... ")
-    soy = GenerateSoy(year, month)
+    soy = GenerateSoy(year)
     soy.run()
     print("Dados gerados e enviados para o banco!")
     input("Pressione qualque tecla para continuar...")
@@ -65,6 +61,3 @@ def not_is_year_between_2009_and_2020(year):
 def not_is_year_between_2018_and_2020(year):
     return int(year) not in range(2018, 2021)
 
-
-def not_is_a_month(month):
-    return int(month) not in range(1, 13)
