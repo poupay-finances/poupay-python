@@ -1,15 +1,15 @@
-from random import randint, choice
+from random import randint
 
 from process import Process
 from utils.enums import Region
 
+
 class GenerateSoy(Process):
-    def __init__(self, year=2009, month=1):
+    def __init__(self, year=2009):
         super().__init__()
         self.year = year
-        self.month = month
         self.datas = []
-        self.type = 'Saco de soja'
+        self.type = 'Tonelada de soja'
         self.cattle_value_in_years = {
             "2018": 84.43,
             "2019": 82.17,
@@ -17,39 +17,39 @@ class GenerateSoy(Process):
         }
 
     def generate(self) -> None:
-        quantity = randint(205_307_954, 218_190_768)
+        quantity = randint(114_316_829, 127_797_712)
         for region in list(Region):
             percentile = self.__get_percentile(region)
-            quantity = round(quantity * (percentile / 100), 0)
-            total_value = self.__get_value(quantity)
+            quantity_percentil = round(quantity * (percentile / 100), 0)
+            total_value = self.__get_value(quantity_percentil)
             self.datas.append((
                 self.year,
-                self.month,
                 self.type,
                 region.value,
-                quantity,
+                quantity_percentil,
                 total_value
             ))
 
     def __get_percentile(self, region: Region) -> float:
         if region == Region.SUL:
-            return 25
+            return 15
         elif region == Region.NORTE:
             return 12.5
         elif region == Region.SUDESTE:
-            return 9.2
+            return 8.2
         elif region == Region.NORDESTE:
             return 18.8
         else:
-            return 45.8
+            return 45.5
 
     def __get_value(self, quantity):
         unit_value = self.cattle_value_in_years[self.year]
-        return round(unit_value * quantity, 2)
+        package_to_ton = 16.6667
+        return round((unit_value * quantity) * package_to_ton, 2)
 
     def save(self):
         for data in self.datas:
             print(data)
-            self.database.insert("insert into valores(ano, mes, tipo,regiao, quantidade, valor)\
-                                values(%s,%s,%s,%s,%s,%s)", data)
+            self.database.insert("insert into valores(ano, tipo, regiao, quantidade, valor)\
+                                values(%s,%s,%s,%s,%s)", data)
         print("Salvou no banco")

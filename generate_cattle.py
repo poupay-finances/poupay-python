@@ -4,10 +4,9 @@ from process import Process
 from utils.enums import Region
 
 class GenerateCattle(Process):
-    def __init__(self, year=2009, month=1):
+    def __init__(self, year=2009):
         super().__init__()
         self.year = year
-        self.month = month
         self.datas = []
         self.type = 'Cabeça de Gado'
         self.cattle_value_in_years = {
@@ -26,17 +25,16 @@ class GenerateCattle(Process):
         }
 
     def generate(self) -> None:
-        quantity = randint(205_307_954, 218_190_768)
+        quantity = randint(205307954, 218190768)
         for region in list(Region):
             percentile = self.__get_percentile(region)
-            quantity = round(quantity * (percentile / 100), 0)
-            total_value = self.__get_value(quantity)
+            quantity_percentil = round(quantity * (percentile / 100), 0)
+            total_value = self.__get_value(quantity_percentil)
             self.datas.append((
                 self.year,
-                self.month,
                 self.type,
                 region.value,
-                quantity,
+                quantity_percentil,
                 total_value
             ))
 
@@ -44,9 +42,9 @@ class GenerateCattle(Process):
         if region == Region.SUL:
             return 17.6
         elif region == Region.NORTE:
-            return 12.5
+            return 14.5
         elif region == Region.SUDESTE:
-            return 10
+            return 11
         elif region == Region.NORDESTE:
             return 21.4
         else:
@@ -59,6 +57,6 @@ class GenerateCattle(Process):
     def save(self):
         for data in self.datas:
             print(data)
-            self.database.insert("insert into valores(ano, mes, tipo,regiao, quantidade, valor)\
-                                values(%s,%s,%s,%s,%s,%s)", data)
+            self.database.insert("insert into valores(ano, tipo,regiao, quantidade, valor)\
+                                values(%s,%s,%s,%s,%s)", data)
         print("Salvou no banco")
