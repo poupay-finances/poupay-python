@@ -1,11 +1,11 @@
-stage: 
+stages: 
     - build
 
 build:
     image: docker:19.03.12
     stage: build
-    services:
-        - docker:19.03.12-dind
+    # services:
+    #     - docker:19.03.12-dind
     variables:
         IMAGE_TAG: $CI_REGISTRY_IMAGE/poupay-database:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
     before-script:
