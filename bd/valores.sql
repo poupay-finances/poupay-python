@@ -9,6 +9,3 @@ create table valores (
     ano int,
 	mes varchar(12)
 );
-
-select * from valores order by regiao;
-truncate table valores;
