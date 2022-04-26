@@ -1,3 +1,4 @@
+create database if not exists poupay;
 use poupay;
 
 create table valores (
