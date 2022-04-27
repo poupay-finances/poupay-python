@@ -23,7 +23,7 @@ jobs:
         env:
           DOCKER_REPO: ${{ env.REGISTRY }}/${{ env.USER_REPO }}
           IMAGE_TAG: ${{ env.DOCKER_REPO }}/poupay-database:${{ github.ref_name }}-${{ github.run_number }}
-        run: docker build -f ./bd/Dockerfile -t $IMAGE_TAG ./bd
+        run: docker build -f ./bd/Dockerfile -t ${{ env.IMAGE_TAG }} ./bd
 
       - name: Login Github Packages
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
