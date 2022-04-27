@@ -21,8 +21,8 @@ jobs:
 
       - name: Build database image
         env:
-          DOCKER_REPO: $REGISTRY/$USER_REPO
-          IMAGE_TAG: $DOCKER_REPO/poupay-database:$GITHUB_REF_NAME-$GITHUB_RUN_NUMBER
+          DOCKER_REPO: ${{ REGISTRY }}/${{ USER_REPO }}
+          IMAGE_TAG: ${{ env.DOCKER_REPO }}/poupay-database:${{ github.ref_name }}-${{ github.run_number }}
         run: docker build -f ./bd/Dockerfile -t $IMAGE_TAG ./bd
 
       - name: Login Github Packages
@@ -30,7 +30,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ github.token }}
 
       - name: Push image
         run: docker push $IMAGE_TAG
