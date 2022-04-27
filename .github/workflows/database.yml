@@ -1,0 +1,19 @@
+name: 'Database image'
+
+on:
+  push:
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Build imagem balanceador back-end
+        env:
+          IMAGE_TAG: $CI_REGISTRY_IMAGE/poupay-database:$GITHUB_REF_NAME-$$GITHUB_SHORT_SHA
+        run: 
