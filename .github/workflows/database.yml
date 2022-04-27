@@ -21,8 +21,7 @@ jobs:
 
       - name: Build database image
         env:
-          DOCKER_REPO: ${{ env.REGISTRY }}/${{ env.USER_REPO }}
-          IMAGE_TAG: ${{ env.DOCKER_REPO }}/poupay-database:${{ github.ref_name }}-${{ github.run_number }}
+          IMAGE_TAG: ${{ env.REGISTRY }}/${{ env.USER_REPO }}/poupay-database:${{ github.ref_name }}-${{ github.run_number }}
         run: docker build -f ./bd/Dockerfile -t ${{ env.IMAGE_TAG }} ./bd
 
       - name: Login Github Packages
