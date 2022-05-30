@@ -52,7 +52,8 @@ class GenerateCattle(Process):
 
     def __get_value(self, quantity):
         unit_value = self.cattle_value_in_years[self.year]
-        return round(unit_value * quantity, 2)
+        ox_to_arroba = 18
+        return round(unit_value * quantity * ox_to_arroba, 2)
 
     def save(self):
         for data in self.datas:
