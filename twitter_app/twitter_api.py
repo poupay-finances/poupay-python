@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from twitter_app.config import Keys
 import twitter
 
@@ -28,8 +28,14 @@ class TwitterConsumer():
         return results
 
     def get_search_by_date(self, termo, count, date):
+        since_date = datetime(int(date[0:4]), int(date[5:7]), int(date[8:10]))
+        until_date = since_date + timedelta(days=1)
+
+        since_str = str(since_date)[0:10]
+        until_str = str(until_date)[0:10]
+
         results = self.api.GetSearch(term=termo, lang='pt',
-                                     count=count, since=date)
+                                     count=count, since=since_str, until=until_str)
 
         return results
 
