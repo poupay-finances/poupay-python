@@ -1,3 +1,4 @@
+import json
 import os
 import boto3
 from generate_meat_data import GenerateMeat
@@ -8,6 +9,18 @@ START_MENU = """
     1 - Gerar dados de comercialização de carne
     2 - Incluir registros no arquivo com tweets
     3 - Sair
+"""
+
+TWITER_MENU = """
+    MENU
+    1 - Tweets de hoje
+    2 - Especificar uma data
+"""
+
+TYPE_MENU = """
+    MENU
+    1 - Salvar em formato JSON
+    2 - Salvar em formato TXT
 """
 
 S3_MENU = """
@@ -86,29 +99,72 @@ def gerar_arquivo_gado():
 
 
 def gerar_arquivo_twitter():
-    termo = input("Digite o termo que deseja pesquisar do twitter: ")
     api = TwitterApi()
+    date_option = ''
+    type_option = ''
+    termo = input("Digite o termo que deseja pesquisar do twitter: ")
+    path = './temp/tweetsBrutos'
 
-    # try
-    try:
-        tweets = api.search_tweets(termo)
-    except:
-        print('API indisponível tente novamente mais tarde')
-        return False
+    while date_option not in ['1', '2']:
+        os.system('cls')
+        print(TWITER_MENU)
+        date_option = input("Digite a opção desejada: ").strip()
 
-    tweets_str_list = []
+        if date_option == '1':
+            try:
+                tweets = api.search_tweets(termo)
+            except:
+                print('API indisponível tente novamente mais tarde')
+                return False
+        elif date_option == '2':
+            try:
+                date_string = input("Digite uma data no formato YYYY-MM-DD. (Ex: 2022-06-01): ").strip()
+                tweets = api.search_tweets_by_date(termo, date_string)
+            except:
+                print('API indisponível tente novamente mais tarde')
+                return False
+        else:
+            input('Opção não reconhecida, pressione qualque tecla para continuar...')
 
-    for t in tweets:
-        tweets_str_list.append(str(t) + '\n')
+    tweets_list = []
 
-    # geração do arquivo
-    path = './temp/tweetsBrutos.txt'
-    apend_file(path, tweets_str_list)
+    while type_option not in ['1', '2']:
+        os.system('cls')
+        print(TYPE_MENU)
+        type_option = input("Digite a opção desejada: ").strip()
 
-    print(
-        f"\n{len(tweets_str_list)} registros incluidos no arquivo '/temp/tweetsBrutos.txt'")
+        if type_option == '1':
+            path += '.json'
+            for t in tweets:
+                tweets_list.append(t.AsDict())
+            apend_file_json(path, tweets_list)
+        elif type_option == '2':
+            path += '.txt'
+            for t in tweets:
+                tweets_list.append(str(t) + '\n')
+            apend_file(path, tweets_list)
+        else:
+            input('Opção não reconhecida, pressione qualque tecla para continuar...')
+
+    os.system('cls')
+    print(f"\n{len(tweets_list)} registros incluidos no arquivo '{path}'")
+
+    # upload S3
+    print(S3_MENU)
+    option = input("Digite a opção desejada: ").strip()
+
+    if option == '1':
+        os.system('cls')
+        upload_s3(path)
+        print('Arquivo carregado com sucesso!')
+    elif option == '2':
+        print('Voltando ao menu principal')
+    else:
+        print('Opção não identificada')
+
     input("Pressione qualque tecla para continuar...")
     os.system('cls')
+
     return True
 
 
@@ -118,6 +174,25 @@ def apend_file(path, conteudo, mode='a'):
 
     arquivo = open(path, mode, encoding='utf-8')
     arquivo.writelines(conteudo)
+
+def apend_file_json(path, conteudo):
+    dir = './temp'
+    checar_diretorio(dir)
+
+    mode = 'r+' if os.path.isfile(path) else 'a'
+
+    with open(path, mode, encoding='utf-8') as file:
+        if mode == 'r+':
+            try:
+                file_data = json.load(file)
+                for d in conteudo:
+                    file_data.append(d)
+                file.seek(0)
+                json.dump(file_data, file, indent = 4, ensure_ascii=False)
+            except:
+                input('Erro ao ler o arquivo, por favor apague o arquivo no diretório e tente novamente, pressione enter para continuar...')
+        else:
+            json.dump(conteudo, file, indent = 4, ensure_ascii=False)
 
 
 def checar_diretorio(dir_name):

@@ -27,6 +27,12 @@ class TwitterConsumer():
 
         return results
 
+    def get_search_by_date(self, termo, count, date):
+        results = self.api.GetSearch(term=termo, lang='pt',
+                                     count=count, since=date)
+
+        return results
+
     def get_tweet(self, id):
         results = self.api.GetStatus(id)
 
