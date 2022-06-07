@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import boto3
@@ -20,7 +21,7 @@ TWITER_MENU = """
 TYPE_MENU = """
     MENU
     1 - Salvar em formato JSON
-    2 - Salvar em formato TXT
+    2 - Salvar em formato CSV
 """
 
 S3_MENU = """
@@ -47,12 +48,35 @@ def menu():
 
 def gerar_arquivo_gado():
     print('Gerando arquivo com dados de comercialização de carnes')
+    path = './temp/meat_2020_2021'
+    type_option = ''
     gerador_valores = GenerateMeat()
 
     paises = ['Argentina', 'Brazil', 'China', 'Germany']
-    lista_linhas = ['Pais;Produto;Ano;Valor']
+    lista_produto = []
     valores_2020 = gerador_valores.generate()
     valores_2021 = gerador_valores.generate()
+
+    def montarResposta(pais, produto, ano, valores):
+        return {
+            'Pais': pais,
+            'Produto': produto,
+            'Ano': ano,
+            'Valor': valores
+        }
+
+    while type_option not in ['1', '2']:
+        os.system('cls')
+        print(TYPE_MENU)
+        type_option = input("Digite a opção desejada: ").strip()
+
+        if type_option == '1':
+            path += '.json'
+        elif type_option == '2':
+            # lista_produto.append('Pais;Produto;Ano;Valor')
+            path += '.csv'
+        else:
+            input('Opção não reconhecida, pressione qualque tecla para continuar...')
 
     for p in paises:
         valores_gado_2020 = valores_2020[p]['gado']
@@ -62,22 +86,27 @@ def gerar_arquivo_gado():
         valores_frango_2021 = valores_2021[p]['frango']
         valores_porco_2021 = valores_2021[p]['porco']
 
-        # Dados 2020
-        lista_linhas.append(f'\n{p};Meat, cattle;2020;{valores_gado_2020}')
-        lista_linhas.append(f'\n{p};Meat, chicken;2020;{valores_frango_2020}')
-        lista_linhas.append(f'\n{p};Meat, pig;2020;{valores_porco_2020}')
+        lista_produto.append(montarResposta(
+            p, 'Meat, cattle', 2020, valores_gado_2020))
+        lista_produto.append(montarResposta(
+            p, 'Meat, chicken', 2020, valores_frango_2020))
+        lista_produto.append(montarResposta(
+            p, 'Meat, pig', 2020, valores_porco_2020))
 
-        # Dados 2021
-        lista_linhas.append(f'\n{p};Meat, cattle;2021;{valores_gado_2021}')
-        lista_linhas.append(f'\n{p};Meat, chicken;2021;{valores_frango_2021}')
-        lista_linhas.append(f'\n{p};Meat, pig;2021;{valores_porco_2021}')
+        lista_produto.append(montarResposta(
+            p, 'Meat, cattle', 2021, valores_gado_2021))
+        lista_produto.append(montarResposta(
+            p, 'Meat, chicken', 2021, valores_frango_2021))
+        lista_produto.append(montarResposta(
+            p, 'Meat, pig', 2021, valores_porco_2021))
 
-    # geração do arquivo
-    path = './temp/meat_2020_2021.csv'
-    apend_file(path, lista_linhas, 'w')
+    if type_option == '1':
+        apend_file_json(path, lista_produto, 'w')
+    else:
+        apend_file_csv(path, lista_produto, 'w')
 
     os.system('cls')
-    print(f"\nRegistros incluidos no arquivo '/temp/meat_2020_2021.csv'")
+    print(f"\nRegistros incluidos no arquivo '{path}'")
 
     # upload S3
     print(S3_MENU)
@@ -99,6 +128,8 @@ def gerar_arquivo_gado():
 
 
 def gerar_arquivo_twitter():
+    fields = ['contributors', 'coordinates', 'created_at', 'current_user_retweet', 'favorite_count', 'favorited', 'full_text', 'geo', 'hashtags', 'id', 'id_str', 'in_reply_to_screen_name', 'in_reply_to_status_id', 'in_reply_to_user_id', 'lang', 'location', 'media', 'place',
+              'possibly_sensitive', 'quoted_status', 'quoted_status_id', 'quoted_status_id_str', 'retweet_count', 'retweeted', 'retweeted_status', 'scopes', 'source', 'text', 'truncated', 'urls', 'user', 'user_mentions', 'withheld_copyright', 'withheld_in_countries', 'withheld_scope']
     api = TwitterApi()
     date_option = ''
     type_option = ''
@@ -118,7 +149,8 @@ def gerar_arquivo_twitter():
                 return False
         elif date_option == '2':
             try:
-                date_string = input("Digite uma data no formato YYYY-MM-DD. (Ex: 2022-06-01): ").strip()
+                date_string = input(
+                    "Digite uma data no formato YYYY-MM-DD. (Ex: 2022-06-01): ").strip()
                 tweets = api.search_tweets_by_date(termo, date_string)
             except:
                 print('API indisponível tente novamente mais tarde')
@@ -128,39 +160,42 @@ def gerar_arquivo_twitter():
 
     tweets_list = []
 
-    while type_option not in ['1', '2']:
-        os.system('cls')
-        print(TYPE_MENU)
-        type_option = input("Digite a opção desejada: ").strip()
+    if len(tweets) > 0:
+        while type_option not in ['1', '2']:
+            os.system('cls')
+            print(TYPE_MENU)
+            type_option = input("Digite a opção desejada: ").strip()
 
-        if type_option == '1':
-            path += '.json'
             for t in tweets:
                 tweets_list.append(t.AsDict())
-            apend_file_json(path, tweets_list)
-        elif type_option == '2':
-            path += '.txt'
-            for t in tweets:
-                tweets_list.append(str(t) + '\n')
-            apend_file(path, tweets_list)
-        else:
-            input('Opção não reconhecida, pressione qualque tecla para continuar...')
 
-    os.system('cls')
-    print(f"\n{len(tweets_list)} registros incluidos no arquivo '{path}'")
+            if type_option == '1':
+                path += '.json'
+                apend_file_json(path, tweets_list)
+            elif type_option == '2':
+                path += '.csv'
+                apend_file_csv(path, tweets_list, fields=fields)
+            else:
+                input('Opção não reconhecida, pressione qualque tecla para continuar...')
 
-    # upload S3
-    print(S3_MENU)
-    option = input("Digite a opção desejada: ").strip()
-
-    if option == '1':
         os.system('cls')
-        upload_s3(path)
-        print('Arquivo carregado com sucesso!')
-    elif option == '2':
-        print('Voltando ao menu principal')
+        print(f"\n{len(tweets_list)} registros incluidos no arquivo '{path}'")
+
+        # upload S3
+        print(S3_MENU)
+        option = input("Digite a opção desejada: ").strip()
+
+        if option == '1':
+            os.system('cls')
+            upload_s3(path)
+            print('Arquivo carregado com sucesso!')
+        elif option == '2':
+            print('Voltando ao menu principal')
+        else:
+            print('Opção não identificada, voltando ao menu principal')
     else:
-        print('Opção não identificada')
+        os.system('cls')
+        print('Nenhum tweet encontrado, voltando ao menu principal')
 
     input("Pressione qualque tecla para continuar...")
     os.system('cls')
@@ -168,18 +203,27 @@ def gerar_arquivo_twitter():
     return True
 
 
-def apend_file(path, conteudo, mode='a'):
+def apend_file_csv(path, conteudo, mode='a', fields=None):
     dir = './temp'
     checar_diretorio(dir)
 
-    arquivo = open(path, mode, encoding='utf-8')
-    arquivo.writelines(conteudo)
+    if fields == None:
+        fields = conteudo[0].keys()
 
-def apend_file_json(path, conteudo):
+    has_file = os.path.isfile(path)
+    with open(path, mode, encoding='utf-8', newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=';')
+        if not has_file or mode != 'a':
+            writer.writeheader()
+        writer.writerows(conteudo)
+
+
+def apend_file_json(path, conteudo, mode=None):
     dir = './temp'
     checar_diretorio(dir)
 
-    mode = 'r+' if os.path.isfile(path) else 'a'
+    if mode == None:
+        mode = 'r+' if os.path.isfile(path) else 'a'
 
     with open(path, mode, encoding='utf-8') as file:
         if mode == 'r+':
@@ -188,11 +232,11 @@ def apend_file_json(path, conteudo):
                 for d in conteudo:
                     file_data.append(d)
                 file.seek(0)
-                json.dump(file_data, file, indent = 4, ensure_ascii=False)
+                json.dump(file_data, file, indent=4, ensure_ascii=False)
             except:
                 input('Erro ao ler o arquivo, por favor apague o arquivo no diretório e tente novamente, pressione enter para continuar...')
         else:
-            json.dump(conteudo, file, indent = 4, ensure_ascii=False)
+            json.dump(conteudo, file, indent=4, ensure_ascii=False)
 
 
 def checar_diretorio(dir_name):
