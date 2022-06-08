@@ -1,7 +1,6 @@
-import csv
-import json
 import os
-import boto3
+from aws_provider import AwsProvider
+from generate_file import GenerateFile
 from generate_meat_data import GenerateMeat
 from twitter_app.main import TwitterApi
 
@@ -49,8 +48,10 @@ def menu():
 def gerar_arquivo_gado():
     print('Gerando arquivo com dados de comercialização de carnes')
     path = './temp/meat_2020_2021'
-    type_option = ''
     gerador_valores = GenerateMeat()
+    file_manager = GenerateFile()
+    aws_provider = AwsProvider()
+    type_option = ''
 
     paises = ['Argentina', 'Brazil', 'China', 'Germany']
     lista_produto = []
@@ -101,9 +102,9 @@ def gerar_arquivo_gado():
             p, 'Meat, pig', 2021, valores_porco_2021))
 
     if type_option == '1':
-        apend_file_json(path, lista_produto, 'w')
+        file_manager.apend_file_json(path, lista_produto, 'w')
     else:
-        apend_file_csv(path, lista_produto, 'w')
+        file_manager.apend_file_csv(path, lista_produto, 'w')
 
     os.system('cls')
     print(f"\nRegistros incluidos no arquivo '{path}'")
@@ -114,7 +115,7 @@ def gerar_arquivo_gado():
 
     if option == '1':
         os.system('cls')
-        upload_s3(path)
+        aws_provider.upload_s3(path)
         print('Arquivo carregado com sucesso!')
     elif option == '2':
         print('Voltando ao menu principal')
@@ -131,6 +132,8 @@ def gerar_arquivo_twitter():
     fields = ['contributors', 'coordinates', 'created_at', 'current_user_retweet', 'favorite_count', 'favorited', 'full_text', 'geo', 'hashtags', 'id', 'id_str', 'in_reply_to_screen_name', 'in_reply_to_status_id', 'in_reply_to_user_id', 'lang', 'location', 'media', 'place',
               'possibly_sensitive', 'quoted_status', 'quoted_status_id', 'quoted_status_id_str', 'retweet_count', 'retweeted', 'retweeted_status', 'scopes', 'source', 'text', 'truncated', 'urls', 'user', 'user_mentions', 'withheld_copyright', 'withheld_in_countries', 'withheld_scope']
     api = TwitterApi()
+    file_manager = GenerateFile()
+    aws_provider = AwsProvider()
     date_option = ''
     type_option = ''
     termo = input("Digite o termo que deseja pesquisar do twitter: ")
@@ -171,10 +174,10 @@ def gerar_arquivo_twitter():
 
             if type_option == '1':
                 path += '.json'
-                apend_file_json(path, tweets_list)
+                file_manager.apend_file_json(path, tweets_list)
             elif type_option == '2':
                 path += '.csv'
-                apend_file_csv(path, tweets_list, fields=fields)
+                file_manager.apend_file_csv(path, tweets_list, fields=fields)
             else:
                 input('Opção não reconhecida, pressione qualque tecla para continuar...')
 
@@ -187,7 +190,7 @@ def gerar_arquivo_twitter():
 
         if option == '1':
             os.system('cls')
-            upload_s3(path)
+            aws_provider.upload_s3(path)
             print('Arquivo carregado com sucesso!')
         elif option == '2':
             print('Voltando ao menu principal')
@@ -201,65 +204,3 @@ def gerar_arquivo_twitter():
     os.system('cls')
 
     return True
-
-
-def apend_file_csv(path, conteudo, mode='a', fields=None):
-    dir = './temp'
-    checar_diretorio(dir)
-
-    if fields == None:
-        fields = conteudo[0].keys()
-
-    has_file = os.path.isfile(path)
-    with open(path, mode, encoding='utf-8', newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=';')
-        if not has_file or mode != 'a':
-            writer.writeheader()
-        writer.writerows(conteudo)
-
-
-def apend_file_json(path, conteudo, mode=None):
-    dir = './temp'
-    checar_diretorio(dir)
-
-    if mode == None:
-        mode = 'r+' if os.path.isfile(path) else 'a'
-
-    with open(path, mode, encoding='utf-8') as file:
-        if mode == 'r+':
-            try:
-                file_data = json.load(file)
-                for d in conteudo:
-                    file_data.append(d)
-                file.seek(0)
-                json.dump(file_data, file, indent=4, ensure_ascii=False)
-            except:
-                input('Erro ao ler o arquivo, por favor apague o arquivo no diretório e tente novamente, pressione enter para continuar...')
-        else:
-            json.dump(conteudo, file, indent=4, ensure_ascii=False)
-
-
-def checar_diretorio(dir_name):
-    if not os.path.isdir(dir_name):
-        os.mkdir(dir_name)
-
-
-def upload_s3(path):
-    s3 = boto3.resource('s3')
-    data = open(path, 'rb')
-    nome = data.name[data.name.rindex('/')+1:len(data.name)]
-
-    try:
-        bucket_names = s3.buckets.all()
-        print('Lista de buckets:')
-        for bucket in bucket_names:
-            print('\t'+bucket.name)
-    except:
-        print('Por favor, verifique suas credenciais no diretório "~/.aws/credentials" e tente novamente!')
-        return
-
-    opt = input('\nPor favor, escreva o nome do bucket a seguir: ')
-
-    s3.Bucket(opt).put_object(
-        Key=nome, Body=data)
-    print('Upload realizado no bucket S3 com sucesso')

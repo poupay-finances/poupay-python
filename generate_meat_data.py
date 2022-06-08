@@ -1,4 +1,4 @@
-from random import randint, randrange
+from random import randrange
 from utils.meat_values import MeatValues
 
 
